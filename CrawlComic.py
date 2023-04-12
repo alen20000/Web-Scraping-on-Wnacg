@@ -5,6 +5,7 @@ Wnacg爬蟲
 import requests
 import os 
 from bs4 import BeautifulSoup
+import re
 
 
 # r定位路徑，防止被轉義
@@ -13,8 +14,8 @@ path = r'C:\Users\Cliff\Desktop\Craw from Wnacg'
 
 def GetTitle_CreatFolder():
 
-    re = requests.get(Main_Page)
-    soup = BeautifulSoup(re.text,'html.parser')
+    req = requests.get(Main_Page)
+    soup = BeautifulSoup(req.text,'html.parser')
     global title_word
     title_word = soup.find(id="bodywrap", class_="userwrap") # Get the title of manga
     title_word = title_word.h2.text
@@ -28,8 +29,8 @@ def GetTitle_CreatFolder():
 
 def EnterTheCover(): #進入第一頁圖片頁
 
-    re = requests.get(Main_Page)
-    soup = BeautifulSoup(re.text,'html.parser')
+    req = requests.get(Main_Page)
+    soup = BeautifulSoup(req.text,'html.parser')
     ExtractSoup = soup.find(class_="pic_box tb")
     ExtractURL = ExtractSoup.a['href']
     global PageURL
@@ -37,8 +38,8 @@ def EnterTheCover(): #進入第一頁圖片頁
 
 def ExtactPic():#提取圖片網址
 
-    re= requests.get(PageURL)
-    soup = BeautifulSoup(re.text, 'html.parser')
+    req= requests.get(PageURL)
+    soup = BeautifulSoup(req.text, 'html.parser')
     ExtractSoup = soup.span.a.img['src']
     global ImgURL
     ImgURL = 'http:' + ExtractSoup
@@ -60,24 +61,28 @@ def SaveImage(): #儲存圖片
 
 def NextPage(): #進入下一頁圖片頁
     global PageURL
-    re = requests.get(PageURL)
-    soup = BeautifulSoup(re.text,'html.parser')
+    req = requests.get(PageURL)
+    soup = BeautifulSoup(req.text,'html.parser')
     ExtractSoup = soup.find("a", class_ = "btntuzao", text = "下一頁")
     PageURL = 'https://www.wnacg.org' + ExtractSoup['href']
     print('下一頁網址:',PageURL)
 
 
 def totalpage(): #計算總共幾頁
-    re = requests.get(Main_Page)
-    soup = BeautifulSoup(re.text,'html.parser')
+    req = requests.get(Main_Page)
+    soup = BeautifulSoup(req.text,"html.parser")
+    extra = str(soup.find_all('label'))
+    global totalpage
+    totalpage = int(re.findall(r'頁數：(\d+)', extra)[0])
 
 Main_Page = input('請輸入爬蟲網址:') # 主頁
-totalpage = int(input('請輸入爬取頁數:'))
+#totalpage = int(input('請輸入爬取頁數:'))
 
 PageCounter = 1 
 countID = '{:04d}'.format(PageCounter)
 
 GetTitle_CreatFolder() #創建
+totalpage()#提取照片總數
 EnterTheCover()#進入第一張圖片頁面
 ExtactPic()#提取圖片
 SaveImage()#儲存圖片
